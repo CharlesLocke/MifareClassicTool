@@ -1607,9 +1607,6 @@ public class WriteTag extends BasicActivity {
      * TODO: Doc.
      */
     private void runValueTransferRestore() {
-        MCReader reader = Common.checkForTagAndCreateReader(this);
-        if (reader == null) return;
-
         int stagingSector = Integer.parseInt(mVtrStageSector.getText().toString());
         int stagingBlock = Integer.parseInt(mVtrStageBlock.getText().toString());
         int destinationSector = Integer.parseInt(mVtrDestSector.getText().toString());
@@ -1635,6 +1632,8 @@ public class WriteTag extends BasicActivity {
         }
 
         // Do we have write permissions to the staging block?
+        MCReader reader = Common.checkForTagAndCreateReader(this);
+        if (reader == null) return;
         HashMap<Integer, int[]> pos = new HashMap<Integer, int[]>();
         if (stagingSector == destinationSector) {
             pos.put(stagingSector, new int[]{stagingBlock, destinationBlock});
@@ -1678,6 +1677,8 @@ public class WriteTag extends BasicActivity {
                     // Prefere key B for writing.
                     stagingKey = stagingKeys[1];
                     useAsKeyB = true;
+                } else {
+                    stagingKey = stagingKeys[0];
                 }
                 break;
             default:
@@ -1687,7 +1688,13 @@ public class WriteTag extends BasicActivity {
         }
 
         // Do we have restore permissions of the staging block?
-        // TODO: Important, otherwise block is written without writing back the backup.
+        int hasRestorePermission = reader.hasDecTransRestPermission(stagingSector, stagingBlock,
+                stagingKey, useAsKeyB);
+        if (hasRestorePermission == 0 || hasRestorePermission == -1) {
+            // Block has no restore permissions (or an unexpected error happened).
+            Toast.makeText(this, R.string.info_no_restore_staging, Toast.LENGTH_LONG);
+            return;
+        }
 
         // Do we have dec/trans/rest permission to destination block?
         // TODO: [Optional] Check if we have a key with dec/trans/rest permissions for the destination sector.
@@ -1696,7 +1703,6 @@ public class WriteTag extends BasicActivity {
         int result = -1;
         for (int i=0; i<2; i++) {
             if (destinationKeys[i] != null) {
-                // TODO: Test why "-1" when only key B is known for dest.
                 result = reader.valueTransferRestore(stagingSector, stagingBlock, destinationSector,
                     destinationBlock, vb, stagingKey, useAsKeyB, destinationKeys[i], (i == 1));
                 if (result == 0) {

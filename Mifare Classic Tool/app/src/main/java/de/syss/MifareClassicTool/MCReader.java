@@ -812,6 +812,70 @@ public class MCReader {
     }
 
     /**
+     * TODO Doc.
+     * @param sector
+     * @param block
+     * @param key
+     * @param useAsKeyB
+     * @return permissions like
+     * {@link Common#getOperationRequirements(byte, byte, byte, Operation, boolean, boolean)}
+     */
+    public int hasDecTransRestPermission(int sector, int block, byte[] key, boolean useAsKeyB) {
+        // Check for sector trailer.
+        if ((block == 3 && sector <= 31) || (block == 15 && sector >= 32)) {
+            // Sector trailers can never have transfer permissions.
+            return 0;
+        }
+
+        // Authenticate.
+        if (!authenticate(sector, key, useAsKeyB)) {
+            return -1;
+        }
+
+        // Read MIFARE Access Conditions.
+        byte[] ac;
+        int acBlock = mMFC.sectorToBlock(sector)
+            + mMFC.getBlockCountInSector(sector) -1;
+        try {
+            ac = mMFC.readBlock(acBlock);
+        } catch (Exception e) {
+            return -1;
+        }
+        // Fix/Check: see isWritableOnPositions()
+        if (ac.length < 16) {
+            return -1;
+        }
+
+        ac = Arrays.copyOfRange(ac, 6, 9);
+        byte[][] acMatrix = Common.acBytesToACMatrix(ac);
+        if (acMatrix == null) {
+            return -1;
+        }
+        boolean isKeyBReadable = Common.isKeyBReadable(
+            acMatrix[0][3], acMatrix[1][3], acMatrix[2][3]);
+
+        // Handle MIFARE Classic 4k Tags.
+        int acBitsForBlock = block;
+        if (sector >= 32) {
+            if (block >= 0 && block <= 4) {
+                acBitsForBlock = 0;
+            } else if (block >= 5 && block <= 9) {
+                acBitsForBlock = 1;
+            } else if (block >= 10 && block <= 14) {
+                acBitsForBlock = 2;
+            }
+        }
+
+        // Check for restore permission on block.
+        return Common.getOperationRequirements(
+                        acMatrix[0][acBitsForBlock],
+                        acMatrix[1][acBitsForBlock],
+                        acMatrix[2][acBitsForBlock],
+                        Operation.DecTransRest,
+                        false, isKeyBReadable);
+    }
+
+    /**
      * Set the key files for {@link #buildNextKeyMapPart()}.
      * Key duplicates from the key file will be removed.
      * @param keyFiles One or more key files.

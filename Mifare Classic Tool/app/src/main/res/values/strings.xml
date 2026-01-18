@@ -462,6 +462,7 @@
     <string name="info_no_key_for_destination">Error: No key found for destination block</string>
     <string name="info_no_write_key_for_staging">Error: No key with write permissions
         found for staging block</string>
+    <string name="info_no_restore_staging">Error: No restore permissions on staging block</string>
 
     <!-- Dialog messages -->
     <string name="dialog_nfc_not_enabled">The NFC adapter is not enabled.
