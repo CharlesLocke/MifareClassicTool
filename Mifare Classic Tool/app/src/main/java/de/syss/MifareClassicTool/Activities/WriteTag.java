@@ -1683,7 +1683,7 @@ public class WriteTag extends BasicActivity {
                 break;
             default:
                 // Error. Should never be any other value.
-                Toast.makeText(this, R.string.info_strange_error, Toast.LENGTH_LONG);
+                Toast.makeText(this, R.string.info_strange_error, Toast.LENGTH_LONG).show();
                 return;
         }
 
@@ -1692,7 +1692,7 @@ public class WriteTag extends BasicActivity {
                 stagingKey, useAsKeyB);
         if (hasRestorePermission == 0 || hasRestorePermission == -1) {
             // Block has no restore permissions (or an unexpected error happened).
-            Toast.makeText(this, R.string.info_no_restore_staging, Toast.LENGTH_LONG);
+            Toast.makeText(this, R.string.info_no_restore_staging, Toast.LENGTH_LONG).show();
             return;
         }
 
