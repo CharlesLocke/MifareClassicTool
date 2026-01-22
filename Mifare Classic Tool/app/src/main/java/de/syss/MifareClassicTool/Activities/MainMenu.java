@@ -302,7 +302,7 @@ public class MainMenu extends AppCompatActivity {
             case HandleNewIntent:
                 Common.setPendingComponentName(null);
                 Intent intent = getIntent();
-                if (intent != null) {
+                if (intent != null && intent.getAction() != null) {
                     boolean isIntentWithTag = intent.getAction().equals(
                             NfcAdapter.ACTION_TECH_DISCOVERED);
                     if (isIntentWithTag && intent != mOldIntent) {
